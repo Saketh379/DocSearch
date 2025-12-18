@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Account Login - DocSearch</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%232563eb' d='M12.41 148.02l232.94 105.67c6.8 3.09 14.49 3.09 21.29 0l232.94-105.67c16.55-7.51 16.55-32.52 0-40.03L266.65 2.31a25.607 25.607 0 0 0-21.29 0L12.41 108c-16.55 7.51-16.55 32.52 0 40.02zm487.18 88.28l-58.09-26.33-161.64 73.27c-7.56 3.43-15.96 5.17-24.32 5.17s-16.76-1.74-24.32-5.17L70.51 210.03 12.41 236.4c-16.55 7.5-16.55 32.5 0 40l232.94 105.7c6.8 3.08 14.49 3.08 21.29 0l232.94-105.7c16.56-7.5 16.56-32.5 0-40zM12.41 324.8l232.94 105.7c6.8 3.09 14.49 3.09 21.29 0l232.94-105.7c16.55-7.51 16.55-32.52 0-40.03l-58.09-26.33-161.64 73.27c-7.56 3.43-15.96 5.17-24.32 5.17s-16.76-1.74-24.32-5.17L70.51 300.08 12.41 326.4c-16.55 7.51-16.55 32.52 0 40.02z'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        .toggle-links { text-align: center; margin-top: 1.2rem; cursor: pointer; color: var(--primary); font-size: 0.9rem; }
+        .toggle-links:hover { text-decoration: underline; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="login-body">
+    <div class="login-card">
+        <div class="login-header">
+            <h2><i class="fa-solid fa-layer-group"></i> DocSearch</h2>
+        </div>
+
+        {% if error %}
+            <div class="error-msg">{{ error }}</div>
+        {% endif %}
+        {% if success %}
+            <div class="error-msg" style="background: #d1fae5; color: #065f46;">{{ success }}</div>
+        {% endif %}
+
+        <form id="login-form" action="/login" method="post">
+            <div class="form-group">
+                <label>User ID</label>
+                <input type="text" name="username" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-primary">Sign In</button>
+            <div class="toggle-links" onclick="toggleForm()">Don't have an account? Sign Up</div>
+        </form>
+
+        <form id="signup-form" action="/signup" method="post" class="hidden">
+            <div class="form-group">
+                <label>User Name</label> <input type="text" name="full_name" required>
+            </div>
+            <div class="form-group">
+                <label>Create User ID</label>
+                <input type="text" name="username" required>
+            </div>
+            <div class="form-group">
+                <label>Create Password</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-create-act">Create Account</button>
+            <div class="toggle-links" onclick="toggleForm()">Already have an account? Sign In</div>
+        </form>
+    </div>
+
+    <script>
+        function toggleForm() {
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            
+            const errorMessages = document.querySelectorAll('.error-msg');
+            errorMessages.forEach(msg => {
+                msg.style.display = 'none';
+            });
+
+            if (loginForm.classList.contains('hidden')) {
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+            } else {
+                loginForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

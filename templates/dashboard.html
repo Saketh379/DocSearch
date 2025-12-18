@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.8"> <title>Dashboard - DocSearch</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%232563eb' d='M12.41 148.02l232.94 105.67c6.8 3.09 14.49 3.09 21.29 0l232.94-105.67c16.55-7.51 16.55-32.52 0-40.03L266.65 2.31a25.607 25.607 0 0 0-21.29 0L12.41 108c-16.55 7.51-16.55 32.52 0 40.02zm487.18 88.28l-58.09-26.33-161.64 73.27c-7.56 3.43-15.96 5.17-24.32 5.17s-16.76-1.74-24.32-5.17L70.51 210.03 12.41 236.4c-16.55 7.5-16.55 32.5 0 40l232.94 105.7c6.8 3.08 14.49 3.08 21.29 0l232.94-105.7c16.56-7.5 16.56-32.5 0-40zM12.41 324.8l232.94 105.7c6.8 3.09 14.49 3.09 21.29 0l232.94-105.7c16.55-7.51 16.55-32.52 0-40.03l-58.09-26.33-161.64 73.27c-7.56 3.43-15.96 5.17-24.32 5.17s-16.76-1.74-24.32-5.17L70.51 300.08 12.41 326.4c-16.55 7.51-16.55 32.52 0 40.02z'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <button class="sidebar-toggle" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <div class="logo">
+                <i class="fa-solid fa-layer-group"></i> DocSearch
+            </div>
+
+            <nav class="nav-links">
+                <a href="#" id="nav-search" onclick="switchTab('search-section')"><i class="fa-solid fa-magnifying-glass"></i> Search</a>
+                <a href="#" id="nav-upload" onclick="switchTab('upload-section')"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</a>
+                <a href="#" id="nav-files" onclick="switchTab('files-section')"><i class="fa-solid fa-folder-open"></i> My Files</a>
+                <a href="#" id="nav-settings" onclick="switchTab('settings-section')"><i class="fa-solid fa-user-gear"></i> Settings</a>
+                <a href="#" id="nav-help" onclick="switchTab('help-section')"><i class="fa-solid fa-circle-question"></i> Help</a>
+            </nav>
+
+            <div class="user-profile">
+                <span title="{{ display_name }}"><i class="fa-solid fa-user-circle"></i> {{ display_name }}</span>
+                <a href="/logout" class="logout-btn" title="Logout"><i class="fa-solid fa-sign-out-alt"></i></a>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" onclick="toggleSidebar(true)"></div>
+
+        <main class="main-content">
+            
+            <section id="search-section" class="content-section">
+                <div class="header">
+                    <h1>Search Documents</h1>
+                    <p>Find relevant documents using keywords or filenames</p>
+                </div>
+
+                <div class="search-bar-container">
+                    <div class="search-controls">
+                        <span class="search-label">Search by:</span>
+                        <select id="search-type">
+                            <option value="content">Content</option>
+                            <option value="filename">Filename</option>
+                        </select>
+                        <input type="text" id="search-input" placeholder="Type your query here..." 
+                               onkeypress="handleEnter(event)" oninput="handleSearchInput(this)">
+                        <button class="btn-primary" onclick="performSearch()">Search</button>
+                    </div>
+                </div>
+
+                <div id="search-results" class="results-grid">
+                    <div class="empty-state">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <p>Your search results will appear here</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="upload-section" class="content-section" style="display:none;">
+                <div class="header">
+                    <h1>Upload Files</h1>
+                    <p>Choose files to store in your personal library</p>
+                </div>
+
+                <div class="upload-container" style="background:white; padding:2rem; border-radius:12px; border:1px solid #e5e7eb;">
+                    <form id="upload-form">
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Custom File Name (Optional)</label>
+                            <input type="text" id="custom_filename" placeholder="To rename, type here before selecting files..." 
+                                   style="width:100%; padding:0.8rem; border:1px solid #e5e7eb; border-radius:6px;"
+                                   onkeypress="handleUploadEnter(event)">
+                        </div>
+
+                        <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <h3>Click or Drag Files Here</h3>
+                            <p style="color:gray; font-size:0.9rem; margin:0;">Supported formats: .pdf, .docx, .txt, .md</p>
+                            <input type="file" id="file-input" multiple hidden onchange="handleNewFiles(this.files)">
+                        </div>
+                        
+                        <div id="file-preview-area" style="margin-top:1.5rem; display:none; border-top: 1px solid #eee; padding-top:1rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                                <h4 style="color:var(--text-dark); margin:0;">Pending Uploads:</h4>
+                                <button type="button" onclick="clearAllFiles()" style="background:none; border:none; color:var(--text-gray); cursor:pointer; font-size:0.85rem;">Clear All</button>
+                            </div>
+                            
+                            <div id="file-list-preview"></div>
+                            
+                            <button type="button" class="btn-primary" onclick="uploadFilesAJAX()" style="margin-top:1rem;">
+                                <i class="fa-solid fa-upload"></i> Start Upload
+                            </button>
+                        </div>
+
+                        <div id="upload-status" style="margin-top:1rem;"></div>
+                    </form>
+                </div>
+            </section>
+
+            <section id="files-section" class="content-section" style="display:none;">
+                <div class="header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h1>Uploaded Files <span class="badge">{{ total_docs }}</span></h1>
+                    <div class="file-actions">
+                        <button id="toggle-select-btn" class="btn-text" onclick="toggleSelectionMode()">
+                            <i class="fa-regular fa-square-check"></i> Select
+                        </button>
+                        <button id="delete-btn" class="btn-danger" style="display:none; background:#ef4444; color:white; border:none; padding:0.5rem 1rem; border-radius:6px; cursor:pointer; margin-left: 10px;" onclick="deleteSelectedDocs()">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="file-list">
+                    {% if total_docs == 0 %}
+                        <div class="empty-state"><p>No files uploaded yet.</p></div>
+                    {% else %}
+                        <table class="file-table" id="file-table">
+                            <thead>
+                                <tr>
+                                    <th class="check-col"><input type="checkbox" id="select-all" onclick="toggleSelectAll()"></th>
+                                    <th class="sortable" onclick="sortTable(1)">
+                                        File Name <i class="fa-solid fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable(2)">
+                                        Upload Date <i class="fa-solid fa-sort"></i>
+                                    </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in docs %}
+                                <tr>
+                                    <td class="check-col"><input type="checkbox" class="doc-checkbox" value="{{ doc.id }}" onclick="updateDeleteButton()"></td>                                    
+                                    <td data-sort="{{ doc.filename|lower }}">
+                                        <i class="fa-solid fa-file-lines" style="color: #6b7280; margin-right: 8px;"></i>
+                                        {{ doc.filename }}
+                                    </td>
+                                    <td data-sort="{{ doc.upload_date }}">
+                                        {{ doc.upload_date }}
+                                    </td>
+                                    <td>
+                                        <a href="/view_file/{{ doc.id }}" target="_blank" class="btn-secondary" style="text-decoration:none; font-size:0.8rem; padding: 0.3rem 0.6rem;">
+                                            <i class="fa-solid fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section id="settings-section" class="content-section" style="display:none;">
+                <div class="header">
+                    <h1>Profile Settings</h1>
+                    <p>Manage your account details and preferences</p>
+                </div>
+
+                <div class="settings-card">
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="edit-fullname" value="{{ display_name }}">
+                        </div>
+                        <div class="form-group">
+                            <label>User ID</label>
+                            <input type="text" id="edit-username" value="{{ user_id }}">
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" id="edit-password" placeholder="Leave blank to keep current password">
+                        </div>
+                        <div id="profile-status" style="margin-bottom:1rem;"></div>
+                        <button type="button" class="btn-primary" onclick="updateProfile()">Save Changes</button>
+                    </form>
+                </div>
+
+                <div class="danger-zone">
+                    <h3>Delete Account</h3>
+                    <p>Permanently delete your account and all data. This action cannot be undone.</p>
+                    <button class="btn-danger" style="background:#dc2626; color:white; padding:0.8rem 1.5rem; border:none; border-radius:6px; cursor:pointer;" onclick="deleteAccount()">
+                        Delete Your Account
+                    </button>
+                </div>
+            </section>
+
+            <section id="help-section" class="content-section" style="display:none;">
+                <div class="header">
+                    <h1>How to use DocSearch</h1>
+                    <p>A quick and easy guide to manage your documents</p>
+                </div>
+                
+                <div class="help-container">
+                    <h2><i class="fa-solid fa-magnifying-glass"></i> Searching</h2>
+                    <p>You can search your documents in two ways. Use the toggle next to the search bar to switch modes:</p>
+                    <ul>
+                        <li><b>Content Search:</b> Looks for keywords inside the actual text of your document.</li>
+                        <li><b>Filename Search:</b> Looks only at the names of your documents.</li>
+                    </ul>
+                    
+                    <h2><i class="fa-solid fa-cloud-arrow-up"></i> Uploading & Renaming</h2>
+                    <p>You can upload one document, multiple documents at once, or a ZIP file containing supported formats.</p>
+                    <ul>
+                        <li><b>Renaming:</b> Type your desired name in the text box before you select the documents.</li>
+                        <li><b>Uploading Multiple Documents:</b> You can add them one by one. Type a name &rarr; Select <b>Doc A</b>. Type a new name &rarr; Select <b>Doc B</b>. Finally, click <b>Start Upload</b> to upload them all.</li>
+                        <li><b>ZIP Handling:</b> It automatically extract ZIPs. If you provide a name (e.g., "ProjectX"), the inner files will be named like "ProjectX_report.pdf".</li>
+                    </ul>
+
+                    <h2><i class="fa-solid fa-folder-open"></i> Managing Documents</h2>
+                    <p>To organize or delete files, open the <b>My Files</b> tab:</p>
+                    <ul>
+                        <li>Click <b>View</b> to open a document, or click <b>Select</b> to enter edit mode.</li>
+                        <li>Select the documents you want to remove and click <b>Delete</b> to permanently remove them from the database.</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const referrer = document.referrer.toLowerCase();
+            const currentPath = window.location.pathname;
+            const isLoginRef = referrer.includes("login") || referrer.includes("signup");
+            if (isLoginRef) {
+                localStorage.removeItem('activeTab');
+                switchTab('search-section');
+            } else {
+                const activeTab = localStorage.getItem('activeTab') || 'search-section';
+                switchTab(activeTab);
+            }
+            setupDragAndDrop();
+        });
+
+        function switchTab(sectionId) {
+            document.querySelectorAll('.content-section').forEach(el => el.style.display = 'none');
+            document.getElementById(sectionId).style.display = 'block';
+            document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
+            let navId = "";
+            if(sectionId === 'search-section') navId = 'nav-search';
+            if(sectionId === 'upload-section') navId = 'nav-upload';
+            if(sectionId === 'files-section') navId = 'nav-files';
+            if(sectionId === 'settings-section') navId = 'nav-settings';
+            if(sectionId === 'help-section') navId = 'nav-help';
+            if(document.getElementById(navId)) document.getElementById(navId).classList.add('active');
+            localStorage.setItem('activeTab', sectionId);
+        }
+
+        async function updateProfile() {
+            const fullName = document.getElementById('edit-fullname').value;
+            const username = document.getElementById('edit-username').value;
+            const password = document.getElementById('edit-password').value;
+            const statusDiv = document.getElementById('profile-status');
+            const formData = new FormData();
+            formData.append("full_name", fullName);
+            formData.append("new_username", username);
+            formData.append("new_password", password);
+            statusDiv.innerHTML = '<span style="color:var(--primary);">Updating...</span>';
+            try {
+                const response = await fetch('/update_profile', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (response.ok) {
+                    statusDiv.innerHTML = `<span style="color:green;">${result.message}</span>`;
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    statusDiv.innerHTML = `<span style="color:red;">${result.message}</span>`;
+                }
+            } catch (e) {
+                statusDiv.innerHTML = `<span style="color:red;">Connection Error</span>`;
+            }
+        }
+
+        async function deleteAccount() {
+            if (!confirm("WARNING: Are you sure you want to delete your account? All your files will be lost forever.")) return;
+            try {
+                const response = await fetch('/delete_account', { method: 'POST' });
+                const result = await response.json();
+                if (response.ok) {
+                    alert("Account deleted.");
+                    window.location.href = "/";
+                } else {
+                    alert("Error: " + result.message);
+                }
+            } catch (e) {
+                alert("Connection Error");
+            }
+        }
+
+        let pendingUploads = [];
+
+        function handleNewFiles(fileList) {
+            const currentCustomName = document.getElementById('custom_filename').value.trim();
+            const inputBox = document.getElementById('custom_filename');
+            if (fileList.length > 0) {
+                Array.from(fileList).forEach(file => {
+                    const exists = pendingUploads.some(item => item.file.name === file.name && item.file.size === file.size);
+                    if (!exists) {
+                        pendingUploads.push({
+                            file: file,
+                            customName: currentCustomName
+                        });
+                    }
+                });
+                if(currentCustomName) {
+                    inputBox.value = "";
+                    inputBox.placeholder = "Type name for next file...";
+                }
+                renderPreview();
+            }
+        }
+
+        function removeFile(index) {
+            pendingUploads.splice(index, 1);
+            renderPreview();
+        }
+
+        function clearAllFiles() {
+            pendingUploads = [];
+            document.getElementById('custom_filename').value = "";
+            document.getElementById('custom_filename').placeholder = "Type name here, then Select Files...";
+            renderPreview();
+        }
+
+        function renderPreview() {
+            const previewArea = document.getElementById('file-preview-area');
+            const list = document.getElementById('file-list-preview');
+            list.innerHTML = "";
+            if (pendingUploads.length > 0) {
+                previewArea.style.display = 'block';
+                pendingUploads.forEach((item, index) => {
+                    const fileSize = (item.file.size / 1024).toFixed(1) + ' KB';
+                    let nameDisplay = item.file.name;
+                    if (item.customName) {
+                        nameDisplay = `<span>${item.file.name}</span> <span class="rename-tag"><i class="fa-solid fa-arrow-right"></i>  ${item.customName}</span>`;
+                    }
+                    const itemHTML = `
+                        <div class="file-preview-item">
+                            <div class="file-info">
+                                <i class="fa-regular fa-file-lines" style="color:var(--primary);"></i>
+                                <span>${nameDisplay}</span> 
+                                <span style="color:#9ca3af; font-size:0.8em; margin-left:5px;">(${fileSize})</span>
+                            </div>
+                            <button type="button" class="remove-file-btn" onclick="removeFile(${index})" title="Remove">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>`;
+                    list.innerHTML += itemHTML;
+                });
+            } else {
+                previewArea.style.display = 'none';
+            }
+        }
+
+        function handleUploadEnter(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                uploadFilesAJAX();
+            }
+        }
+
+        async function uploadFilesAJAX() {
+            const statusDiv = document.getElementById('upload-status');
+            if (pendingUploads.length === 0) {
+                statusDiv.innerHTML = `<div style="color:red;">Please select files first.</div>`;
+                return;
+            }
+            const formData = new FormData();
+            pendingUploads.forEach(item => {
+                formData.append("files", item.file);
+                formData.append("custom_filenames", item.customName);
+            });
+            statusDiv.innerHTML = '<div style="color:var(--primary); padding:10px; background:#eff6ff; border-radius:6px;"><i class="fa-solid fa-spinner fa-spin"></i> Uploading...</div>';
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (response.ok) {
+                    statusDiv.innerHTML = `<div style="color:green; background:#dcfce7; padding:10px; border-radius:6px; margin-top:10px;">
+                        <i class="fa-solid fa-check-circle"></i> Upload Successful! Reloading...
+                    </div>`;
+                    pendingUploads = [];
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    statusDiv.innerHTML = `<div style="color:red; margin-top:10px;">Error: ${result.error || "Upload failed"}</div>`;
+                }
+            } catch (e) {
+                statusDiv.innerHTML = `<div style="color:red; margin-top:10px;">Network Error.</div>`;
+            }
+        }
+
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('drop-zone');
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+            });
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-active'), false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-active'), false);
+            });
+            dropZone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                handleNewFiles(files);
+            }, false);
+        }
+
+        function handleSearchInput(input) {
+            if (input.value.trim() === "") {
+                document.getElementById('search-results').innerHTML = `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p>Your search results will appear here</p></div>`;
+            }
+        }
+
+        function handleEnter(e) { 
+            if (e.key === 'Enter') performSearch(); 
+        }
+
+        async function performSearch() {
+            const query = document.getElementById('search-input').value;
+            const type = document.getElementById('search-type').value;
+            const resultsContainer = document.getElementById('search-results');
+            if (!query.trim()) return;
+            resultsContainer.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Searching...</div>';
+            try {
+                const response = await fetch(`/search?query=${encodeURIComponent(query)}&search_type=${type}`);
+                const data = await response.json();
+                resultsContainer.innerHTML = '';
+                if (data.results.length === 0) {
+                    resultsContainer.innerHTML = '<div class="empty-state"><p>No matching documents found</p></div>';
+                    return;
+                }
+                data.results.forEach(res => {
+                    resultsContainer.innerHTML += `
+                        <div class="result-card">
+                            <div class="card-header">
+                                <span class="doc-title"><i class="fa-regular fa-file-lines"></i> ${res.filename}</span>
+                            </div>
+                            <div class="card-body"><p>${res.snippet}</p></div>
+                            <div style="text-align:right; margin-top:10px;"><a href="/view_file/${res.id}" target="_blank" style="color:var(--primary);">View Document &rarr;</a></div>
+                        </div>`;
+                });
+            } catch (error) { resultsContainer.innerHTML = '<div class="error">Error searching</div>'; }
+        }
+
+        let selectionMode = false;
+        function toggleSelectionMode() {
+            selectionMode = !selectionMode;
+            const table = document.getElementById('file-table');
+            const btn = document.getElementById('toggle-select-btn');
+            if (selectionMode) {
+                table.classList.add('selection-mode');
+                btn.innerHTML = '<i class="fa-solid fa-times"></i> Cancel';
+                btn.style.color = '#6b7280';
+            } else {
+                table.classList.remove('selection-mode');
+                btn.innerHTML = '<i class="fa-regular fa-square-check"></i> Select';
+                btn.style.color = 'var(--primary)';
+                document.getElementById('delete-btn').style.display = 'none';
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            }
+        }
+
+        function toggleSelectAll() {
+            const master = document.getElementById('select-all');
+            document.querySelectorAll('.doc-checkbox').forEach(cb => cb.checked = master.checked);
+            updateDeleteButton();
+        }
+
+        function updateDeleteButton() {
+            const count = document.querySelectorAll('.doc-checkbox:checked').length;
+            const btn = document.getElementById('delete-btn');
+            btn.style.display = count > 0 ? 'inline-block' : 'none';
+            if(count > 0) btn.innerHTML = `<i class="fa-solid fa-trash"></i> Delete (${count})`;
+        }
+
+        async function deleteSelectedDocs() {
+            const ids = Array.from(document.querySelectorAll('.doc-checkbox:checked')).map(cb => parseInt(cb.value));
+            if (!confirm(`Delete ${ids.length} document(s)?`)) return;
+            try {
+                const response = await fetch('/delete_docs', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ doc_ids: ids }) });
+                if (response.ok) window.location.reload();
+            } catch (e) { alert("Error connecting to server."); }
+        }
+
+        function sortTable(n) {
+            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.querySelector(".file-table");
+            switching = true;
+            dir = "asc";
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    var xVal = x.getAttribute('data-sort') || x.innerText.toLowerCase();
+                    var yVal = y.getAttribute('data-sort') || y.innerText.toLowerCase();
+                    if (dir == "asc") {
+                        if (xVal.localeCompare(yVal, undefined, {numeric: true}) > 0) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir == "desc") {
+                        if (xVal.localeCompare(yVal, undefined, {numeric: true}) < 0) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+
+        function toggleSidebar(forceClose) {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const toggleBtnIcon = document.querySelector('.sidebar-toggle i');
+            if (window.innerWidth > 768) return;
+            if (forceClose) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active'); 
+            } else {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+            if (sidebar.classList.contains('active')) {
+                toggleBtnIcon.classList.remove('fa-bars');
+                toggleBtnIcon.classList.add('fa-times');
+            } else {
+                toggleBtnIcon.classList.remove('fa-times');
+                toggleBtnIcon.classList.add('fa-bars');
+            }
+        }
+    </script>
+
+</body>
+</html>
