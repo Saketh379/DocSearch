@@ -107,6 +107,7 @@ body { font-family:'Inter',sans-serif; background-color:var(--bg-light); color:v
     .sidebar { position: fixed; top: 0; left: -260px; height: 100vh; z-index: 1000; transition: left 0.3s ease-in-out; box-shadow: 4px 0 15px rgba(0,0,0,0.1); }
     .sidebar.active { left: 0; }
     .sidebar-toggle { display: flex; }
+    .user-profile { padding-bottom: 2rem; }
     .main-content { padding: 1.5rem; padding-top: 5rem; width: 100%; margin-left: 0; }
     .login-card { width: 90%; padding: 1.5rem; }
 }
